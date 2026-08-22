@@ -7,6 +7,21 @@ import re
 import concurrent.futures
 import subprocess
 import os
+import time
+
+#--------------------------------------------------------
+
+def scan_port(target,port):
+    s = sambungan()
+    connection = s.connect_ex((target, port))
+    if connection == 0:
+        print(f"[+] Port {port} koneksi terhubung")
+        input("Tekan Enter Untuk Melanjutkan")
+    else:
+        print(f"[-] Port {port} Koneksi Tidak Ada")
+
+    s.close()
+
 
 #--------------------------------------------------------
 
@@ -14,20 +29,51 @@ def port_single(target):
     while True:
         asc()
         port = input("[~] Masukkan Port Target : ")
-
         if not port:
             print("[!] IP Tidak Valid")
             input("[~] Tekan Enter Untuk Melanjutkan")
             continue
-        print(target, port)
-        input("[~] Ketik Enter Untuk Selesaikan Pengecekan")
-        return port
+        port_int = int(port)
+        scan_port(target,port_int)
+
+        return
 
 #--------------------------------------------------------
 
-def multi_port():
-    print("Multi Port")
-    input("Checklist Selesai")
+def multi_port(target):
+    while True:
+        asc()
+        print(f"[~] IP Target Terkonfirmasi {target}")
+        r_input = input("[~] Masukkan Port Range (example:10-40) : ").strip()
+
+        # Validasi tanda "-"
+        if "-" not in r_input:
+            print(f"[!] IP Range Salah! Gunakan Format 12-30\n")
+            input("Tekan Enter Untuk Melanjutkan")
+
+        try:
+            port_awal, port_akhir = r_input.split("-")
+            start = int(port_awal)
+            end = int(port_akhir)
+
+            if start > end: # Pengecekan Port
+                print("[!] Angka Awal Harus Lebih Kecil\n")
+                input("Tekan Enter Untuk Melanjutkan")
+                continue
+
+            print(f"[*] Memulai Pengecekan Port Pada Target {target} {start} -> {end}...")
+
+            for port in range(start, end + 1):
+                scan_port(target, port)
+                time.sleep(0.1)
+
+            input("\n[+] Pemindaian Selesai Tekan Enter Untuk Melanjutkan")
+            return
+            
+        except ValueError:
+            print("[!] Format Port Harus Berupa Angka")
+            input("Tekan Enter Untuk Melanjutkan")
+            continue
 
 #--------------------------------------------------------
 
@@ -69,7 +115,7 @@ def ssh_detect():
             case "1":
                 port_single(target)
             case "2":
-                multi_port()
+                multi_port(target)
             case "3":
                 port_range()
             case "0":
